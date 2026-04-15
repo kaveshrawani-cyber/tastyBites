@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Summary</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f0;
+      color: #1a1a1a;
+      padding: 1.5rem 1rem;
+    }
+
+    .container { max-width: 480px; margin: 0 auto; }
+
+    h1 { font-size: 22px; font-weight: 500; margin-bottom: 1.5rem; }
+
+    /* Alert boxes */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 1rem;
+    }
+    .alert.error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert.success { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
+
+    /* Cards */
+    .card {
+      background: #fff;
+      border: 1px solid #e0e0d8;
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #aaa;
+      margin-bottom: 10px;
+    }
+
+    /* Item rows */
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0efe8;
+      font-size: 14px;
+    }
+    .item-row:last-of-type { border-bottom: none; }
+    .item-row .item-price { color: #777; }
+
+    /* Total */
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      margin-top: 8px;
+      border-top: 1px solid #ddd;
+    }
+    .total-row .label { font-size: 15px; font-weight: 500; }
+    .total-row .amount { font-size: 20px; font-weight: 500; }
+
+    /* Meta rows */
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      padding: 7px 0;
+      border-bottom: 1px solid #f0efe8;
+    }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-row .meta-key { color: #777; }
+    .meta-row .meta-val { font-weight: 500; }
+
+    /* Status badge */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    /* Order type radios */
+    .radio-grid { display: flex; gap: 10px; }
+    .radio-label {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .radio-label:has(input:checked) {
+      border-color: #1a1a1a;
+      background: #f8f8f5;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      padding: 12px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 0.5rem;
+    }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .error-msg {
+      font-size: 13px;
+      color: #b91c1c;
+      margin-top: 8px;
+      display: none;
+    }
+
+    /* Success state */
+    .success-box {
+      display: none;
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .success-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #16a34a;
+      color: #fff;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+    }
+    .success-box h2 { font-size: 17px; font-weight: 500; color: #15803d; margin-bottom: 6px; }
+    .success-box p  { font-size: 13px; color: #555; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Order summary</h1>
+
+  <!--
+    PHP guard checks — in production this page starts with:
+
+    session_start();
+    include 'config.php';
+    if (!isset($_SESSION['user_id']))       { die("Please login first."); }
+    if (empty($_SESSION['cart']))            { die("Cart is empty."); }
+    if (!isset($_POST['order_type']))        { die("Order type not selected."); }
+
+    Replace the JS demo data below with PHP-echoed values.
+  -->
+
+  <!-- Cart items card -->
+  <div class="card">
+    <div class="section-label">Cart items</div>
+
+    <!--
+      PHP loop equivalent:
+      foreach($_SESSION['cart'] as $id){
+        $stmt = $conn->prepare("SELECT * FROM food_menus WHERE id=?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        echo "<div class='item-row'>
+                <span>{$row['name']}</span>
+                <span class='item-price'>&#8377;{$row['price']}</span>
+              </div>";
+        $total += $row['price'];
+      }
+    -->
+
+    <div id="item-list"></div>
+
+    <div class="total-row">
+      <span class="label">Total</span>
+      <span class="amount" id="total-display">₹0</span>
+    </div>
+  </div>
+
+  <!-- Order details card -->
+  <div class="card">
+    <div class="section-label">Order details</div>
+    <div class="meta-row">
+      <span class="meta-key">Order type</span>
+      <span class="meta-val" id="order-type-display">—</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-key">User</span>
+      <!--
+        PHP: echo "<span class='meta-val'>{$_SESSION['user_id']}</span>";
+      -->
+      <span class="meta-val" id="user-display">#—</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-key">Status</span>
+      <span class="badge">Pending payment</span>
+    </div>
+  </div>
+
+  <!-- Order type selection -->
+  <div class="card">
+    <div class="section-label" style="margin-bottom:12px">Select order type</div>
+    <div class="radio-grid">
+      <label class="radio-label">
+        <input type="radio" name="order_type" value="Dine-In" onchange="setOrderType('Dine-In')" />
+        Dine-in
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="order_type" value="Home Delivery" onchange="setOrderType('Home Delivery')" />
+        Home delivery
+      </label>
+    </div>
+    <div class="error-msg" id="type-error">Please select an order type to continue.</div>
+  </div>
+
+  <button class="btn-primary" id="confirm-btn" onclick="confirmOrder()">
+    Confirm &amp; place order
+  </button>
+
+  <div class="success-box" id="success-box">
+    <div class="success-icon">&#10003;</div>
+    <h2>Order placed!</h2>
+    <p id="success-detail">Your order has been saved.</p>
+  </div>
+</div>
+
+<script>
+  /*
+   * DEMO DATA — replace with PHP JSON output in production.
+   *
+   * Example PHP to produce this:
+   *   $cartItems = [];
+   *   $total = 0;
+   *   foreach ($_SESSION['cart'] as $id) {
+   *     $stmt = $conn->prepare("SELECT * FROM food_menus WHERE id=?");
+   *     $stmt->bind_param("i", $id);
+   *     $stmt->execute();
+   *     $row = $stmt->get_result()->fetch_assoc();
+   *     $cartItems[] = $row;
+   *     $total += $row['price'];
+   *   }
+   *   echo "const cartItems = " . json_encode($cartItems) . ";";
+   *   echo "const sessionUserId = " . json_encode($_SESSION['user_id']) . ";";
+   *   echo "const presetOrderType = " . json_encode($_POST['order_type'] ?? '') . ";";
+   */
+  const cartItems = [
+    { id: 1, name: 'Margherita Pizza', price: 199 },
+    { id: 4, name: 'Veg Burger',       price: 129 },
+    { id: 11, name: 'Cold Coffee',     price: 79  }
+  ];
+  const sessionUserId  = 1042;
+  const presetOrderType = '';   // Set from $_POST['order_type'] in PHP
+
+  let selectedOrderType = presetOrderType;
+  let total = 0;
+
+  function init() {
+    const list = document.getElementById('item-list');
+    cartItems.forEach(item => {
+      total += item.price;
+      list.innerHTML += `
+        <div class="item-row">
+          <span>${item.name}</span>
+          <span class="item-price">&#8377;${item.price}</span>
+        </div>`;
+    });
+    document.getElementById('total-display').textContent = '₹' + total;
+    document.getElementById('user-display').textContent  = '#' + sessionUserId;
+
+    if (presetOrderType) {
+      document.querySelector(`input[value="${presetOrderType}"]`).checked = true;
+      setOrderType(presetOrderType);
+    }
+  }
+
+  function setOrderType(type) {
+    selectedOrderType = type;
+    document.getElementById('order-type-display').textContent = type;
+    document.getElementById('type-error').style.display = 'none';
+  }
+
+  function confirmOrder() {
+    if (!selectedOrderType) {
+      document.getElementById('type-error').style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('confirm-btn');
+    btn.disabled = true;
+
+    /*
+     * POST to payment.php — equivalent to:
+     *   INSERT INTO orders (user_id, order_type, total_amount)
+     *   VALUES (?, ?, ?)
+     *
+     * In production you can use fetch() or a hidden form submit:
+     *
+     *   fetch('payment.php', {
+     *     method: 'POST',
+     *     headers: { 'Content-Type': 'application/json' },
+     *     body: JSON.stringify({ order_type: selectedOrderType, total })
+     *   }).then(() => window.location.href = 'thankyou.php');
+     *
+     * OR submit a standard HTML form to payment.php.
+     */
+
+    document.getElementById('success-detail').textContent =
+      `${selectedOrderType} · ₹${total} · Saved to orders table`;
+    document.getElementById('success-box').style.display = 'block';
+    document.getElementById('order-type-display').textContent = selectedOrderType;
+
+    // Uncomment to redirect after save:
+    // setTimeout(() => window.location.href = 'thankyou.php', 2000);
+  }
+
+  init();
+</script>
+
+</body>
+</html>
