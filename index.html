@@ -3,21 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TastyBites website</title>
-    <link rel="stylesheet" href="style.css">
+    <title>TastyBites | Home</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f8f9fa;
+        }
+
+        header {
+            background-color: #ff6b6b;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        nav {
+            margin-top: 10px;
+        }
+
+        nav a {
+            margin: 0 12px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .hero h1 {
+            font-size: 40px;
+            color: #333;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: #555;
+        }
+
+        .btn {
+            margin-top: 20px;
+            padding: 10px 18px;
+            border: none;
+            background-color: #ff6b6b;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background-color: #ff4c4c;
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            margin-top: 40px;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Welcome to My Website</h1>
-    <p>This is my first website built with VS Code!</p>
 
-    <!-- Navigation -->
-    <nav>
-        <a href="index.html">Index Page</a>
-        <a href="login.html">Login Page</a>
-        <a href="menupg.html">Menu Page</a>
-        <a href="payment.html">Payment Page</a>
-    </nav>
+    <header>
+        <h2>🍔 TastyBites</h2>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="login.html">Login</a>
+            <a href="menupg.html">Menu</a>
+            <a href="payment.html">Payment</a>
+        </nav>
+    </header>
 
-    
+    <section class="hero">
+        <h1>Welcome to TastyBites!</h1>
+        <p>Delicious food delivered to your doorstep 🍕🍟</p>
+
+        <!-- Button to go to Menu Page -->
+        <a href="menupg.html" class="btn">View Menu</a>
+    </section>
+
+    <footer>
+        <p>© 2026 TastyBites. All rights reserved.</p>
+    </footer>
+
 </body>
 </html>
